@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Onde Comprar | Chumbada Oficial</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,34 +21,49 @@
       --bg: #F8FAFC;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: #0F172A; }
-    h1 { font-family: 'Bebas Neue', sans-serif; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); font-size: 3.5rem; text-align: center; margin: 40px 0 10px; }
-    p.subtitle { text-align: center; color: #64748B; margin-bottom: 30px; }
-
-    header { background: white; padding: 15px 0; border-bottom: 1px solid #e2e8f0; text-align: center; position: sticky; top: 0; z-index: 1000; }
-    header img { height: 40px; }
-
-    .search-container { max-width: 900px; margin: 0 auto 30px; padding: 0 20px; }
-    .search-box { background: white; padding: 10px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; gap: 10px; border: 1px solid #e2e8f0; }
-    .search-box input { flex: 1; border: none; padding: 10px 20px; font-size: 1rem; outline: none; border-radius: 30px; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: #0F172A; -webkit-tap-highlight-color: transparent; }
     
-    .btn { border: none; padding: 12px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
-    .btn-search { background: var(--primary); color: white; }
-    .btn-gps { background: #f1f5f9; color: var(--primary); }
-    .btn:hover { transform: scale(1.02); opacity: 0.9; }
+    header { background: white; padding: 12px 0; border-bottom: 1px solid #e2e8f0; text-align: center; position: sticky; top: 0; z-index: 1000; }
+    header img { height: 35px; }
 
-    .main-layout { max-width: 1240px; margin: 0 auto; padding: 0 20px 50px; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
-    #map { height: 550px; border-radius: 20px; border: 1px solid #e2e8f0; z-index: 1; }
-    .side-list { background: white; border-radius: 20px; height: 550px; overflow-y: auto; padding: 20px; border: 1px solid #e2e8f0; }
+    h1 { font-family: 'Bebas Neue', sans-serif; text-transform: uppercase; color: var(--primary); font-size: 2.5rem; text-align: center; margin: 25px 0 5px; }
+    .subtitle { text-align: center; color: #64748B; font-size: 0.9rem; margin-bottom: 20px; padding: 0 20px; }
 
-    .store-card { padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 15px; cursor: pointer; transition: 0.2s; border-left: 5px solid var(--primary); }
-    .store-card:hover { background: #f0f9ff; border-color: var(--primary); }
-    .dist-tag { background: var(--accent); color: white; padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 900; margin-bottom: 5px; display: inline-block; }
+    .search-container { max-width: 900px; margin: 0 auto 20px; padding: 0 15px; }
+    .search-box { background: white; padding: 8px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; gap: 8px; border: 1px solid #e2e8f0; }
+    .search-box input { flex: 1; border: none; padding: 12px 15px; font-size: 1rem; outline: none; border-radius: 10px; width: 100%; }
+    
+    .btn-group { display: flex; gap: 8px; }
+    .btn { border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-search { background: var(--primary); color: white; flex: 2; }
+    .btn-gps { background: #f1f5f9; color: var(--primary); flex: 1; }
 
-    @media (max-width: 900px) {
-      .main-layout { grid-template-columns: 1fr; }
+    .main-layout { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 0 15px 40px; }
+    
+    /* MAPA: Altura fixa menor no mobile */
+    #map { height: 350px; width: 100%; border-radius: 15px; border: 1px solid #e2e8f0; z-index: 1; }
+    
+    .side-list { background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; }
+    .side-list h3 { font-family: 'Bebas Neue', sans-serif; color: var(--primary); margin-bottom: 15px; font-size: 1.5rem; }
+
+    .store-card { padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 12px; cursor: pointer; border-left: 5px solid var(--primary); background: #fff; }
+    .store-card:active { background: #f0f9ff; }
+    .dist-tag { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 900; margin-bottom: 5px; display: inline-block; }
+
+    /* Ajustes para Desktop */
+    @media (min-width: 900px) {
+      .main-layout { flex-direction: row; align-items: flex-start; }
+      #map { height: 600px; flex: 1; position: sticky; top: 80px; }
+      .side-list { width: 380px; height: 600px; overflow-y: auto; }
+      h1 { font-size: 4rem; }
+      .search-box { border-radius: 50px; padding: 10px; }
+    }
+
+    /* Mobile: Botões em linha */
+    @media (max-width: 600px) {
       .search-box { flex-direction: column; border-radius: 20px; }
-      .btn { width: 100%; justify-content: center; }
+      .btn-group { width: 100%; }
+      #map { height: 300px; } /* Menor ainda no celular para sobrar tela */
     }
   </style>
 </head>
@@ -56,26 +71,43 @@
 
 <header><img src="https://cdn.shopify.com/s/files/1/0454/5845/6736/files/Logo-chumbada-OFICIAL-horizonatal-2_f758e5db-514c-4559-8549-94cd56f40ef7.png?v=1756759937"></header>
 
-<h1>Onde Comprar</h1>
-<p class="subtitle">Encontre a revenda Chumbada Oficial mais próxima de você.</p>
+<div class="container">
+    <h1>Onde Comprar</h1>
+    <p class="subtitle">Encontre a revenda Chumbada Oficial mais próxima de você.</p>
 
-<div class="search-container">
-    <div class="search-box">
-        <input type="text" id="addressInput" placeholder="Cidade, CEP ou Bairro...">
-        <button class="btn btn-gps" onclick="useGPS()"><i class="ph ph-map-pin"></i> GPS</button>
-        <button class="btn btn-search" onclick="doSearch()"><i class="ph ph-magnifying-glass"></i> BUSCAR</button>
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" id="addressInput" placeholder="Cidade ou CEP...">
+            <div class="btn-group">
+                <button class="btn btn-gps" onclick="useGPS()"><i class="ph ph-map-pin"></i> GPS</button>
+                <button class="btn btn-search" onclick="doSearch()"><i class="ph ph-magnifying-glass"></i> BUSCAR</button>
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="main-layout">
-    <div id="map"></div>
-    <div class="side-list" id="storeList">
-        <p style="text-align: center; color: #94a3b8; margin-top: 50px;">Carregando lojas...</p>
+    <div class="main-layout">
+        <div id="map"></div>
+        <div class="side-list" id="storeList">
+            <h3>Lojas</h3>
+            <p id="statusMsg" style="color: #94a3b8; font-size: 0.9rem;">Buscando lojas disponíveis...</p>
+        </div>
     </div>
 </div>
 
 <script>
-    var map = L.map('map').setView([-14.235, -51.925], 4);
+    // Inicializa o mapa com "tap" desativado para ajudar na rolagem mobile
+    var map = L.map('map', {
+        tap: false, 
+        dragging: !L.Browser.mobile, // Desativa arraste com 1 dedo no mobile por padrão
+        scrollWheelZoom: false // Evita zoom acidental ao rolar a página
+    }).setView([-14.235, -51.925], 4);
+
+    // Se for mobile, avisa que precisa de 2 dedos ou habilita scroll da página por cima do mapa
+    if (L.Browser.mobile) {
+        map.dragging.disable();
+        map.once('focus', function() { map.dragging.enable(); });
+    }
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     var markers = L.layerGroup().addTo(map);
     var stores = [];
@@ -87,8 +119,6 @@
         skipEmptyLines: true,
         complete: function(results) {
             stores = results.data;
-            console.log("Lojas carregadas:", stores.length);
-            
             stores.forEach(s => {
                 let lat = parseFloat(String(s.latitude).replace(',', '.'));
                 let lon = parseFloat(String(s.longitude).replace(',', '.'));
@@ -96,10 +126,10 @@
                     L.marker([lat, lon]).addTo(markers).bindPopup(`<b>${s.nome}</b><br>${s.descricao || ''}`);
                 }
             });
-            document.getElementById('storeList').innerHTML = '<p style="text-align:center; color:#64748B;">Use a busca acima para listar lojas por proximidade.</p>';
+            document.getElementById('statusMsg').innerText = 'Use a busca para listar por proximidade.';
         },
         error: function() {
-            document.getElementById('storeList').innerHTML = '<p style="color:red; text-align:center;"><b>Erro:</b> O arquivo "lojas.csv" não foi encontrado. Verifique se ele está na mesma pasta e com nome minúsculo.</p>';
+            document.getElementById('statusMsg').innerHTML = '<span style="color:red">Erro ao carregar lojas.csv</span>';
         }
     });
 
@@ -126,12 +156,12 @@
             let sLon = parseFloat(String(s.longitude).replace(',', '.'));
             let d = Math.sqrt(Math.pow(sLat - lat, 2) + Math.pow(sLon - lon, 2)) * 111;
             return {...s, d, sLat, sLon};
-        }).filter(s => !isNaN(s.d)).sort((a,b) => a.d - b.d).slice(0, 15);
+        }).filter(s => !isNaN(s.d)).sort((a,b) => a.dist - b.dist).slice(0, 15);
 
         let html = '<h3>Lojas mais próximas:</h3>';
         sorted.forEach(s => {
             html += `
-                <div class="store-card" onclick="map.setView([${s.sLat}, ${s.sLon}], 15)">
+                <div class="store-card" onclick="map.setView([${s.sLat}, ${s.sLon}], 15); window.scrollTo({top: 0, behavior: 'smooth'});">
                     <span class="dist-tag">${s.d.toFixed(1)} KM</span>
                     <h4>${s.nome}</h4>
                     <p>${s.descricao || ''}</p>
@@ -139,6 +169,11 @@
                 </div>`;
         });
         document.getElementById('storeList').innerHTML = html;
+        
+        // No mobile, rola automaticamente para a lista após a busca
+        if(window.innerWidth < 900) {
+            document.getElementById('storeList').scrollIntoView({ behavior: 'smooth' });
+        }
     }
 </script>
 
