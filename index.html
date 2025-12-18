@@ -40,30 +40,26 @@
 
     .main-layout { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 0 15px 40px; }
     
-    /* MAPA: Altura fixa menor no mobile */
     #map { height: 350px; width: 100%; border-radius: 15px; border: 1px solid #e2e8f0; z-index: 1; }
     
     .side-list { background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; }
     .side-list h3 { font-family: 'Bebas Neue', sans-serif; color: var(--primary); margin-bottom: 15px; font-size: 1.5rem; }
 
-    .store-card { padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 12px; cursor: pointer; border-left: 5px solid var(--primary); background: #fff; }
+    .store-card { padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 12px; cursor: pointer; border-left: 5px solid var(--primary); background: #fff; text-align: left; width: 100%; }
     .store-card:active { background: #f0f9ff; }
     .dist-tag { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 900; margin-bottom: 5px; display: inline-block; }
 
-    /* Ajustes para Desktop */
     @media (min-width: 900px) {
       .main-layout { flex-direction: row; align-items: flex-start; }
       #map { height: 600px; flex: 1; position: sticky; top: 80px; }
       .side-list { width: 380px; height: 600px; overflow-y: auto; }
       h1 { font-size: 4rem; }
-      .search-box { border-radius: 50px; padding: 10px; }
     }
 
-    /* Mobile: Botões em linha */
     @media (max-width: 600px) {
       .search-box { flex-direction: column; border-radius: 20px; }
       .btn-group { width: 100%; }
-      #map { height: 300px; } /* Menor ainda no celular para sobrar tela */
+      #map { height: 300px; }
     }
   </style>
 </head>
@@ -95,14 +91,12 @@
 </div>
 
 <script>
-    // Inicializa o mapa com "tap" desativado para ajudar na rolagem mobile
     var map = L.map('map', {
         tap: false, 
-        dragging: !L.Browser.mobile, // Desativa arraste com 1 dedo no mobile por padrão
-        scrollWheelZoom: false // Evita zoom acidental ao rolar a página
+        dragging: !L.Browser.mobile,
+        scrollWheelZoom: false
     }).setView([-14.235, -51.925], 4);
 
-    // Se for mobile, avisa que precisa de 2 dedos ou habilita scroll da página por cima do mapa
     if (L.Browser.mobile) {
         map.dragging.disable();
         map.once('focus', function() { map.dragging.enable(); });
@@ -112,7 +106,6 @@
     var markers = L.layerGroup().addTo(map);
     var stores = [];
 
-    // Carregar CSV
     Papa.parse("lojas.csv", {
         download: true,
         header: true,
@@ -151,18 +144,31 @@
 
     function processResult(lat, lon) {
         map.setView([lat, lon], 12);
+        
         let sorted = stores.map(s => {
             let sLat = parseFloat(String(s.latitude).replace(',', '.'));
             let sLon = parseFloat(String(s.longitude).replace(',', '.'));
-            let d = Math.sqrt(Math.pow(sLat - lat, 2) + Math.pow(sLon - lon, 2)) * 111;
-            return {...s, d, sLat, sLon};
-        }).filter(s => !isNaN(s.d)).sort((a,b) => a.dist - b.dist).slice(0, 15);
+            
+            // Fórmula Haversine para precisão em KM
+            const R = 6371;
+            const dLat = (sLat - lat) * Math.PI / 180;
+            const dLon = (sLon - lon) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat * Math.PI / 180) * Math.cos(sLat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const dist = R * c;
+
+            return {...s, dist, sLat, sLon};
+        })
+        .filter(s => !isNaN(s.dist))
+        .sort((a, b) => a.dist - b.dist) // Organiza da menor para a maior distância
+        .slice(0, 15);
 
         let html = '<h3>Lojas mais próximas:</h3>';
         sorted.forEach(s => {
             html += `
                 <div class="store-card" onclick="map.setView([${s.sLat}, ${s.sLon}], 15); window.scrollTo({top: 0, behavior: 'smooth'});">
-                    <span class="dist-tag">${s.d.toFixed(1)} KM</span>
+                    <span class="dist-tag">${s.dist.toFixed(1)} KM</span>
                     <h4>${s.nome}</h4>
                     <p>${s.descricao || ''}</p>
                     <p style="color:var(--primary); font-weight:700; margin-top:5px;">${s.telefone || ''}</p>
@@ -170,7 +176,6 @@
         });
         document.getElementById('storeList').innerHTML = html;
         
-        // No mobile, rola automaticamente para a lista após a busca
         if(window.innerWidth < 900) {
             document.getElementById('storeList').scrollIntoView({ behavior: 'smooth' });
         }
