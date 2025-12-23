@@ -40,11 +40,28 @@
     .hero-locator { padding: 40px 0; text-align: center; background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 70%); }
     .hero-locator h1 { font-size: 3rem; color: var(--primary); margin-bottom: 5px; }
 
-    .search-container { max-width: 800px; margin: -20px auto 30px; padding: 0 24px; position: relative; z-index: 10; }
-    .search-box { background: white; padding: 20px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; gap: 10px; }
-    .search-box input { flex: 1; border: none; padding: 10px 20px; font-size: 1rem; outline: none; border-radius: 30px; }
-    .btn-search { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-    .btn-search:hover { background: #005a96; transform: scale(1.05); }
+    /* Container do botão de GPS */
+    .search-container { max-width: 600px; margin: -20px auto 30px; padding: 0 24px; position: relative; z-index: 10; text-align: center; }
+    
+    .btn-gps { 
+      background: var(--primary); 
+      color: white; 
+      border: none; 
+      padding: 18px 30px; 
+      border-radius: 50px; 
+      font-weight: 800; 
+      font-size: 1.1rem;
+      cursor: pointer; 
+      transition: 0.3s; 
+      box-shadow: 0 10px 25px rgba(0, 111, 185, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-gps:hover { background: #005a96; transform: scale(1.02); box-shadow: 0 15px 30px rgba(0, 111, 185, 0.4); }
+    .btn-gps:active { transform: scale(0.98); }
 
     .main-grid { max-width: 1240px; margin: 0 auto; padding: 0 24px 40px; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
     #map { height: 600px; border-radius: 20px; border: 1px solid #e2e8f0; z-index: 1; }
@@ -61,7 +78,6 @@
 
     .dist-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 800; margin-bottom: 5px; display: inline-block; }
 
-    /* Estilo para o box de vendas no final da lista */
     .sales-cta { margin-top: auto; padding-top: 20px; border-top: 1px dashed #cbd5e1; text-align: center; }
     .sales-cta p { font-size: 0.85rem; color: var(--gray); margin-bottom: 10px; }
     .btn-sales { display: flex; align-items: center; justify-content: center; width: 100%; background: var(--whatsapp); color: white; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); }
@@ -70,7 +86,6 @@
 
     @media (max-width: 900px) {
       .main-grid { grid-template-columns: 1fr; }
-      .search-box { border-radius: 15px; flex-direction: column; }
       #map { height: 300px; }
       .results-list { height: auto; max-height: 500px; }
     }
@@ -93,10 +108,9 @@
   </section>
 
   <div class="search-container">
-    <div class="search-box">
-      <input type="text" id="addressInput" placeholder="Digite sua cidade ou CEP...">
-      <button class="btn-search" onclick="doSearch()"><i class="ph ph-magnifying-glass"></i> BUSCAR</button>
-    </div>
+    <button class="btn-gps" onclick="getLocation()">
+      <i class="ph ph-crosshair"></i> ENCONTRAR LOJAS PERTO DE MIM
+    </button>
   </div>
 
   <div class="main-grid">
@@ -112,10 +126,8 @@
     var markers = L.layerGroup().addTo(map);
     var stores = [];
 
-    // URL do WhatsApp de Vendas
     const whatsappSalesLink = "https://api.whatsapp.com/send/?phone=%2B5511941900602&text&type=phone_number&app_absent=0";
 
-    // Carregamento do CSV
     Papa.parse("lojas.csv", {
       download: true,
       header: true,
@@ -124,16 +136,15 @@
         stores = res.data;
         console.log("Lojas lidas:", stores.length);
         renderMarkers();
-        // Exibe mensagem inicial + botão de vendas
         document.getElementById('results').innerHTML = `
           <div style="flex:1; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px;">
-            <p style="color: var(--gray);">Digite uma localização acima para ver as lojas próximas.</p>
+            <p style="color: var(--gray);">Clique no botão acima para localizar as lojas mais próximas de você.</p>
           </div>
           ${getSalesFooter()}
         `;
       },
       error: function() {
-        document.getElementById('results').innerHTML = '<p style="color: red; text-align: center;">Erro: Arquivo "lojas.csv" não encontrado. Verifique se o nome está em minúsculo no GitHub.</p>';
+        document.getElementById('results').innerHTML = '<p style="color: red; text-align: center;">Erro: Arquivo "lojas.csv" não encontrado.</p>';
       }
     });
 
@@ -147,33 +158,41 @@
       });
     }
 
-    function doSearch() {
-      let q = document.getElementById('addressInput').value;
-      if(!q) return;
-      
-      document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); margin-top: 20px;">Buscando...</p>';
+    // --- NOVA FUNÇÃO DE GPS ---
+    function getLocation() {
+      if (navigator.geolocation) {
+        // Mostra feedback visual que está carregando
+        const btn = document.querySelector('.btn-gps');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> LOCALIZANDO...';
+        btn.disabled = true;
 
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&countrycodes=br&limit=1`)
-        .then(r => r.json())
-        .then(data => {
-          if(data.length > 0) {
-            let uLat = parseFloat(data[0].lat);
-            let uLon = parseFloat(data[0].lon);
+        navigator.geolocation.getCurrentPosition(
+          // Sucesso
+          (position) => {
+            let uLat = position.coords.latitude;
+            let uLon = position.coords.longitude;
+            
             map.setView([uLat, uLon], 12);
             showNearStores(uLat, uLon);
-          } else { 
-            alert("Local não encontrado."); 
-            // Restaura o footer mesmo se não achar
-            document.getElementById('results').innerHTML = `
-              <div style="text-align: center; padding: 20px; color: var(--gray);">Local não encontrado. Tente novamente.</div>
-              ${getSalesFooter()}
-            `;
+
+            // Restaura o botão
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          },
+          // Erro
+          (error) => {
+            alert("Não conseguimos obter sua localização. Verifique se o GPS está ativo e se você permitiu o acesso.");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
           }
-        });
+        );
+      } else {
+        alert("Seu navegador não suporta geolocalização.");
+      }
     }
 
     function showNearStores(uLat, uLon) {
-      // Filtra e ordena lojas
       let sorted = stores.map(s => {
         let sLat = parseFloat(String(s.latitude).replace(',', '.'));
         let sLon = parseFloat(String(s.longitude).replace(',', '.'));
@@ -187,10 +206,7 @@
         html += '<p style="text-align:center; padding:20px; color:var(--gray);">Nenhuma loja encontrada nessa região.</p>';
       } else {
         sorted.forEach(s => {
-          // Limpa telefone para link (remove caracteres não numéricos)
           let cleanPhone = s.telefone ? String(s.telefone).replace(/\D/g, '') : '';
-          
-          // Cria o HTML do telefone apenas se existir
           let phoneHtml = s.telefone ? 
             `<a href="tel:${cleanPhone}" class="store-phone"><i class="ph ph-phone"></i> ${s.telefone}</a>` : '';
 
@@ -204,13 +220,10 @@
         });
       }
 
-      // Adiciona o rodapé de vendas ao final da lista gerada
       html += getSalesFooter();
-
       document.getElementById('results').innerHTML = html;
     }
 
-    // Função auxiliar para gerar o HTML do botão de vendas
     function getSalesFooter() {
       return `
         <div class="sales-cta">
