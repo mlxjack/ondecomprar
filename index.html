@@ -18,7 +18,6 @@
     :root {
       --primary: #006FB9; /* Azul Profundo */
       --accent: #F97316; /* Laranja */
-      --whatsapp: #25D366; /* Verde Zap */
       --dark: #0F172A;
       --gray: #64748B;
       --bg-body: #F8FAFC;
@@ -40,54 +39,34 @@
     .hero-locator { padding: 40px 0; text-align: center; background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 70%); }
     .hero-locator h1 { font-size: 3rem; color: var(--primary); margin-bottom: 5px; }
 
-    /* Container do botão de GPS */
-    .search-container { max-width: 600px; margin: -20px auto 30px; padding: 0 24px; position: relative; z-index: 10; text-align: center; }
-    
-    .btn-gps { 
-      background: var(--primary); 
-      color: white; 
-      border: none; 
-      padding: 18px 30px; 
-      border-radius: 50px; 
-      font-weight: 800; 
-      font-size: 1.1rem;
-      cursor: pointer; 
-      transition: 0.3s; 
-      box-shadow: 0 10px 25px rgba(0, 111, 185, 0.3);
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      justify-content: center;
-    }
-    .btn-gps:hover { background: #005a96; transform: scale(1.02); box-shadow: 0 15px 30px rgba(0, 111, 185, 0.4); }
-    .btn-gps:active { transform: scale(0.98); }
+    .search-container { max-width: 800px; margin: -20px auto 30px; padding: 0 24px; position: relative; z-index: 10; }
+    .search-box { background: white; padding: 10px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; gap: 10px; align-items: center; }
+    .search-box input { flex: 1; border: none; padding: 12px 25px; font-size: 1rem; outline: none; border-radius: 30px; }
+    .btn-search { background: var(--primary); color: white; border: none; padding: 14px 30px; border-radius: 30px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+    .btn-search:hover { background: #005a96; transform: scale(1.02); }
 
-    .main-grid { max-width: 1240px; margin: 0 auto; padding: 0 24px 40px; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+    .main-grid { max-width: 1240px; margin: 0 auto; padding: 0 24px 40px; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
     #map { height: 600px; border-radius: 20px; border: 1px solid #e2e8f0; z-index: 1; }
-    .results-list { background: white; border-radius: 20px; height: 600px; overflow-y: auto; padding: 20px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+    .results-list { background: white; border-radius: 20px; height: 600px; overflow-y: auto; padding: 20px; border: 1px solid #e2e8f0; }
     
-    .store-card { padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9; margin-bottom: 15px; cursor: pointer; transition: 0.2s; border-left: 4px solid var(--primary); }
-    .store-card:hover { background: #f0f9ff; transform: translateX(5px); }
-    .store-card h4 { font-size: 1rem; margin-bottom: 5px; color: var(--dark); }
-    .store-card p { font-size: 0.85rem; color: var(--gray); }
+    .store-card { padding: 20px; border-radius: 15px; border: 1px solid #f1f5f9; margin-bottom: 15px; transition: 0.2s; border-left: 5px solid var(--primary); background: #fff; }
+    .store-card:hover { border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    .store-card h4 { font-size: 1.1rem; margin-bottom: 8px; color: var(--dark); font-weight: 800; }
+    .store-card p { font-size: 0.85rem; color: var(--gray); line-height: 1.4; }
+    .dist-badge { background: var(--accent); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-bottom: 10px; display: inline-block; }
     
-    .store-phone { display: inline-block; margin-top: 8px; color: var(--primary); font-weight: 700; text-decoration: none; font-size: 0.9rem; padding: 5px 10px; background: rgba(0, 111, 185, 0.1); border-radius: 8px; transition: 0.2s; }
-    .store-phone:hover { background: var(--primary); color: white; }
-    .store-phone i { margin-right: 5px; }
-
-    .dist-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 800; margin-bottom: 5px; display: inline-block; }
-
-    .sales-cta { margin-top: auto; padding-top: 20px; border-top: 1px dashed #cbd5e1; text-align: center; }
-    .sales-cta p { font-size: 0.85rem; color: var(--gray); margin-bottom: 10px; }
-    .btn-sales { display: flex; align-items: center; justify-content: center; width: 100%; background: var(--whatsapp); color: white; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); }
-    .btn-sales:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(37, 211, 102, 0.3); }
-    .btn-sales i { font-size: 1.2rem; margin-right: 8px; }
+    .btn-directions { 
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 15px; background: #22c55e; color: white; 
+      text-decoration: none; padding: 8px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; transition: 0.2s; 
+    }
+    .btn-directions:hover { background: #16a34a; }
 
     @media (max-width: 900px) {
       .main-grid { grid-template-columns: 1fr; }
-      #map { height: 300px; }
-      .results-list { height: auto; max-height: 500px; }
+      .search-box { border-radius: 15px; flex-direction: column; padding: 15px; }
+      .search-box input { width: 100%; text-align: center; }
+      .btn-search { width: 100%; justify-content: center; }
+      #map { height: 400px; }
     }
   </style>
 </head>
@@ -104,19 +83,20 @@
 
   <section class="hero-locator">
     <h1>Onde Comprar</h1>
-    <p>Encontre o revendedor Chumbada Oficial mais próximo.</p>
+    <p>Encontre o revendedor Chumbada Oficial mais próximo de você.</p>
   </section>
 
   <div class="search-container">
-    <button class="btn-gps" onclick="getLocation()">
-      <i class="ph ph-crosshair"></i> ENCONTRAR LOJAS PERTO DE MIM
-    </button>
+    <div class="search-box">
+      <input type="text" id="addressInput" placeholder="Digite seu CEP ou sua cidade (Ex: 01310-930)">
+      <button class="btn-search" onclick="doSearch()"><i class="ph ph-magnifying-glass"></i> BUSCAR LOJAS</button>
+    </div>
   </div>
 
   <div class="main-grid">
     <div id="map"></div>
     <div class="results-list" id="results">
-      <p style="text-align: center; color: var(--gray); margin-top: 50px;">Carregando lojas...</p>
+      <p style="text-align: center; color: var(--gray); margin-top: 50px;">Carregando revendedores...</p>
     </div>
   </div>
 
@@ -126,25 +106,18 @@
     var markers = L.layerGroup().addTo(map);
     var stores = [];
 
-    const whatsappSalesLink = "https://api.whatsapp.com/send/?phone=%2B5511941900602&text&type=phone_number&app_absent=0";
-
+    // Carregamento do CSV 
     Papa.parse("lojas.csv", {
       download: true,
       header: true,
       skipEmptyLines: true,
       complete: function(res) {
         stores = res.data;
-        console.log("Lojas lidas:", stores.length);
         renderMarkers();
-        document.getElementById('results').innerHTML = `
-          <div style="flex:1; display:flex; align-items:center; justify-content:center; text-align:center; padding:20px;">
-            <p style="color: var(--gray);">Clique no botão acima para localizar as lojas mais próximas de você.</p>
-          </div>
-          ${getSalesFooter()}
-        `;
+        document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Digite sua localização acima para ver as lojas mais próximas.</p>';
       },
       error: function() {
-        document.getElementById('results').innerHTML = '<p style="color: red; text-align: center;">Erro: Arquivo "lojas.csv" não encontrado.</p>';
+        document.getElementById('results').innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Erro ao carregar lista de lojas. Verifique o arquivo "lojas.csv".</p>';
       }
     });
 
@@ -158,81 +131,85 @@
       });
     }
 
-    // --- NOVA FUNÇÃO DE GPS ---
-    function getLocation() {
-      if (navigator.geolocation) {
-        // Mostra feedback visual que está carregando
-        const btn = document.querySelector('.btn-gps');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> LOCALIZANDO...';
-        btn.disabled = true;
+    // Busca robusta com suporte a CEP (via ViaCEP) e Nome de Cidade (via Nominatim)
+    async function doSearch() {
+      let query = document.getElementById('addressInput').value.trim();
+      if(!query) return;
 
-        navigator.geolocation.getCurrentPosition(
-          // Sucesso
-          (position) => {
-            let uLat = position.coords.latitude;
-            let uLon = position.coords.longitude;
-            
+      let resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Buscando...</p>';
+
+      // Verifica se é um formato de CEP (8 números, ignorando traço)
+      let cleanCEP = query.replace(/\D/g, '');
+      
+      if (cleanCEP.length === 8) {
+        try {
+          const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
+          const data = await response.json();
+          
+          if (!data.erro) {
+            // Se o CEP for válido, busca as coordenadas baseadas no endereço do CEP
+            let fullAddress = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}, Brasil`;
+            performGeocoding(fullAddress);
+          } else {
+            alert("CEP não encontrado. Tente digitar o nome da sua cidade.");
+            resultsDiv.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">CEP não encontrado.</p>';
+          }
+        } catch (e) {
+          performGeocoding(query); // Fallback para busca normal
+        }
+      } else {
+        performGeocoding(query);
+      }
+    }
+
+    function performGeocoding(address) {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${address}&countrycodes=br&limit=1`)
+        .then(r => r.json())
+        .then(data => {
+          if(data.length > 0) {
+            let uLat = parseFloat(data[0].lat);
+            let uLon = parseFloat(data[0].lon);
             map.setView([uLat, uLon], 12);
             showNearStores(uLat, uLon);
-
-            // Restaura o botão
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-          },
-          // Erro
-          (error) => {
-            alert("Não conseguimos obter sua localização. Verifique se o GPS está ativo e se você permitiu o acesso.");
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+          } else { 
+            alert("Não conseguimos localizar esse endereço. Tente ser mais específico (Ex: Nome da Cidade, Estado)."); 
+            document.getElementById('results').innerHTML = '';
           }
-        );
-      } else {
-        alert("Seu navegador não suporta geolocalização.");
-      }
+        });
     }
 
     function showNearStores(uLat, uLon) {
       let sorted = stores.map(s => {
         let sLat = parseFloat(String(s.latitude).replace(',', '.'));
         let sLon = parseFloat(String(s.longitude).replace(',', '.'));
+        
+        // Cálculo de distância em KM 
         let d = Math.sqrt(Math.pow(sLat - uLat, 2) + Math.pow(sLon - uLon, 2)) * 111;
         return {...s, d, sLat, sLon};
-      }).filter(s => !isNaN(s.d)).sort((a,b) => a.d - b.d).slice(0, 10);
+      }).filter(s => !isNaN(s.d)).sort((a,b) => a.d - b.d).slice(0, 15);
 
       let html = '';
-      
       if(sorted.length === 0) {
-        html += '<p style="text-align:center; padding:20px; color:var(--gray);">Nenhuma loja encontrada nessa região.</p>';
+        html = '<p style="text-align: center; color: var(--gray); padding: 20px;">Nenhuma loja encontrada na região.</p>';
       } else {
         sorted.forEach(s => {
-          let cleanPhone = s.telefone ? String(s.telefone).replace(/\D/g, '') : '';
-          let phoneHtml = s.telefone ? 
-            `<a href="tel:${cleanPhone}" class="store-phone"><i class="ph ph-phone"></i> ${s.telefone}</a>` : '';
-
+          // Link direto para o Google Maps 
+          const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${s.sLat},${s.sLon}`;
+          
           html += `
-            <div class="store-card" onclick="map.setView([${s.sLat}, ${s.sLon}], 15)">
-              <span class="dist-badge">${s.d.toFixed(1)} KM</span>
-              <h4>${s.nome}</h4>
-              <p>${s.descricao || ''}</p>
-              ${phoneHtml}
+            <div class="store-card">
+              <span class="dist-badge">${s.d.toFixed(1)} KM de distância</span>
+              <h4 onclick="map.setView([${s.sLat}, ${s.sLon}], 15)" style="cursor:pointer">${s.nome}</h4>
+              <p><i class="ph ph-map-pin"></i> ${s.descricao || ''}</p>
+              <p style="margin-top:5px; font-weight:700; color:var(--primary)"><i class="ph ph-phone"></i> ${s.telefone || ''}</p>
+              <a href="${gMapsUrl}" target="_blank" class="btn-directions">
+                <i class="ph ph-navigation-arrow"></i> COMO CHEGAR
+              </a>
             </div>`;
         });
       }
-
-      html += getSalesFooter();
       document.getElementById('results').innerHTML = html;
-    }
-
-    function getSalesFooter() {
-      return `
-        <div class="sales-cta">
-          <p>Sua loja parceira não está aqui?</p>
-          <a href="${whatsappSalesLink}" target="_blank" class="btn-sales">
-            <i class="ph ph-whatsapp-logo"></i> FALAR COM EQUIPE DE VENDAS
-          </a>
-        </div>
-      `;
     }
   </script>
 </body>
