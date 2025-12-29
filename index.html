@@ -51,7 +51,6 @@
     .results-list { background: white; border-radius: 20px; height: 600px; overflow-y: auto; padding: 20px; border: 1px solid #e2e8f0; }
     
     .store-card { padding: 20px; border-radius: 15px; border: 1px solid #f1f5f9; margin-bottom: 15px; transition: 0.2s; border-left: 5px solid var(--primary); background: #fff; }
-    .store-card:hover { border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
     .store-card h4 { font-size: 1.1rem; margin-bottom: 8px; color: var(--dark); font-weight: 800; }
     .store-card p { font-size: 0.85rem; color: var(--gray); line-height: 1.4; margin-bottom: 4px; }
     .dist-badge { background: var(--accent); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-bottom: 10px; display: inline-block; }
@@ -60,14 +59,9 @@
       display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: #22c55e; color: white; 
       text-decoration: none; padding: 8px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; transition: 0.2s; 
     }
-    .btn-directions:hover { background: #16a34a; }
 
     @media (max-width: 900px) {
       .main-grid { grid-template-columns: 1fr; }
-      .search-box { border-radius: 20px; flex-wrap: wrap; justify-content: center; }
-      .search-box input { min-width: 200px; width: 100%; order: 1; }
-      .btn-search { width: 80%; order: 2; justify-content: center; }
-      .btn-gps { order: 3; }
       #map { height: 350px; }
     }
   </style>
@@ -85,12 +79,12 @@
 
   <section class="hero-locator">
     <h1>Onde Comprar</h1>
-    <p>Encontre o revendedor Chumbada Oficial mais próximo de você.</p>
+    <p>Localize os revendedores Chumbada Oficial em tempo real.</p>
   </section>
 
   <div class="search-container">
     <div class="search-box">
-      <button class="btn-gps" onclick="getLocation()" title="Usar minha localização atual"><i class="ph ph-gps"></i></button>
+      <button class="btn-gps" onclick="getLocation()" title="Usar meu GPS"><i class="ph ph-gps"></i></button>
       <input type="text" id="addressInput" placeholder="Digite seu CEP ou cidade...">
       <button class="btn-search" id="btnSearch" onclick="doSearch()"><i class="ph ph-magnifying-glass"></i> BUSCAR</button>
     </div>
@@ -99,7 +93,7 @@
   <div class="main-grid">
     <div id="map"></div>
     <div class="results-list" id="results">
-      <p style="text-align: center; color: var(--gray); margin-top: 50px;">Carregando lojas...</p>
+      <p style="text-align: center; color: var(--gray); margin-top: 50px;">Carregando...</p>
     </div>
   </div>
 
@@ -110,14 +104,12 @@
     var userMarker = L.layerGroup().addTo(map);
     var stores = [];
 
-    // Limpa coordenadas que venham com pontos extras no CSV (ex: -2.976.258) [cite: 1, 68]
+    // Limpeza profunda de coordenadas do CSV
     function cleanCoord(val) {
       if (!val) return NaN;
-      let s = String(val).trim().replace(',', '.');
+      let s = String(val).replace(/[^\d\.,-]/g, '').replace(',', '.');
       let parts = s.split('.');
-      if (parts.length > 2) {
-        s = parts[0] + '.' + parts.slice(1).join('');
-      }
+      if (parts.length > 2) s = parts[0] + '.' + parts.slice(1).join('');
       return parseFloat(s);
     }
 
@@ -128,7 +120,7 @@
       complete: function(res) {
         stores = res.data;
         renderMarkers();
-        document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Use o GPS ou digite seu CEP para localizar as lojas.</p>';
+        document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Busque por CEP para ver as distâncias exatas.</p>';
       }
     });
 
@@ -137,29 +129,26 @@
         let lat = cleanCoord(s.latitude);
         let lon = cleanCoord(s.longitude);
         if(!isNaN(lat) && !isNaN(lon)) {
-          L.marker([lat, lon]).addTo(markers).bindPopup(`<b>${s.nome}</b><br>${s.descricao || ''}`);
+          L.marker([lat, lon]).addTo(markers).bindPopup(`<b>${s.nome}</b>`);
         }
       });
     }
 
-    // Função GPS (Localização Atual) 
     function getLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          updateMapAndList(lat, lon, "Sua Localização");
-        }, () => alert("Não foi possível acessar seu GPS. Tente digitar o CEP."));
+          updateMapAndList(pos.coords.latitude, pos.coords.longitude, "Sua posição atual");
+        }, () => alert("GPS não autorizado. Digite o CEP."));
       }
     }
 
     async function doSearch() {
       const input = document.getElementById('addressInput').value.trim();
+      const btn = document.getElementById('btnSearch');
       if(!input) return;
 
-      const btn = document.getElementById('btnSearch');
       btn.disabled = true;
-      btn.innerHTML = "Buscando...";
+      btn.innerHTML = "Calculando...";
 
       let cleanCEP = input.replace(/\D/g, '');
       
@@ -168,16 +157,15 @@
           const resp = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
           const data = await resp.json();
           if (!data.erro) {
-            // Agora usa o endereço COMPLETO para dar precisão exata 
-            performGeocoding(`${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}, Brasil`);
+            // Busca o endereço COMPLETO para precisão máxima
+            const fullAddr = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}, Brasil`;
+            performGeocoding(fullAddr);
           } else {
             alert("CEP não encontrado.");
             resetBtn();
           }
         } catch (e) { performGeocoding(input); }
-      } else {
-        performGeocoding(input);
-      }
+      } else { performGeocoding(input); }
     }
 
     function resetBtn() {
@@ -192,17 +180,15 @@
         .then(data => {
           if(data.length > 0) {
             updateMapAndList(parseFloat(data[0].lat), parseFloat(data[0].lon));
-          } else {
-            alert("Endereço exato não localizado. Tente digitar apenas a cidade.");
-          }
+          } else { alert("Endereço não encontrado."); }
         })
         .finally(() => resetBtn());
     }
 
-    function updateMapAndList(uLat, uLon, label = "Você está aqui") {
+    function updateMapAndList(uLat, uLon, label = "Ponto de busca") {
       userMarker.clearLayers();
-      L.circleMarker([uLat, uLon], { color: 'red', radius: 10 }).addTo(userMarker).bindPopup(label).openPopup();
-      map.setView([uLat, uLon], 13);
+      L.circleMarker([uLat, uLon], { color: 'red', radius: 8 }).addTo(userMarker).bindPopup(label).openPopup();
+      map.setView([uLat, uLon], 14);
       showNearStores(uLat, uLon);
     }
 
@@ -210,23 +196,21 @@
       let sorted = stores.map(s => {
         let sLat = cleanCoord(s.latitude);
         let sLon = cleanCoord(s.longitude);
-        // Distância Haversine aproximada 
+        // Fórmula de distância Haversine simplificada
         let d = Math.sqrt(Math.pow(sLat - uLat, 2) + Math.pow(sLon - uLon, 2)) * 111.32;
         return {...s, d, sLat, sLon};
       }).filter(s => !isNaN(s.d)).sort((a,b) => a.d - b.d).slice(0, 15);
 
       let html = '';
       sorted.forEach(s => {
-        // Link corrigido para rota do Google Maps 
-        const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${s.sLat},${s.sLon}`;
-        
+        const routeUrl = `https://www.google.com/maps/dir/?api=1&destination=${s.sLat},${s.sLon}`;
         html += `
           <div class="store-card">
             <span class="dist-badge">${s.d.toFixed(1)} KM</span>
-            <h4 onclick="map.setView([${s.sLat}, ${s.sLon}], 15)" style="cursor:pointer">${s.nome}</h4>
+            <h4 onclick="map.setView([${s.sLat}, ${s.sLon}], 16)" style="cursor:pointer">${s.nome}</h4>
             <p><i class="ph ph-map-pin"></i> ${s.descricao || ''}</p>
             <p style="font-weight:700; color:var(--primary)"><i class="ph ph-phone"></i> ${s.telefone || ''}</p>
-            <a href="${gMapsUrl}" target="_blank" class="btn-directions">
+            <a href="${routeUrl}" target="_blank" class="btn-directions">
               <i class="ph ph-navigation-arrow"></i> COMO CHEGAR
             </a>
           </div>`;
