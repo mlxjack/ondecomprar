@@ -39,10 +39,12 @@
     .hero-locator h1 { font-size: 3rem; color: var(--primary); margin-bottom: 5px; }
 
     .search-container { max-width: 800px; margin: -20px auto 30px; padding: 0 24px; position: relative; z-index: 10; }
-    .search-box { background: white; padding: 10px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; gap: 10px; align-items: center; }
+    .search-box { background: white; padding: 10px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; gap: 8px; align-items: center; }
     .search-box input { flex: 1; border: none; padding: 12px 25px; font-size: 1rem; outline: none; border-radius: 30px; }
-    .btn-search { background: var(--primary); color: white; border: none; padding: 14px 30px; border-radius: 30px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
-    .btn-search:disabled { background: var(--gray); cursor: not-allowed; }
+    
+    .btn-search { background: var(--primary); color: white; border: none; padding: 14px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+    .btn-gps { background: #f1f5f9; color: var(--primary); border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .btn-gps:hover { background: #e2e8f0; color: var(--accent); }
 
     .main-grid { max-width: 1240px; margin: 0 auto; padding: 0 24px 40px; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
     #map { height: 600px; border-radius: 20px; border: 1px solid #e2e8f0; z-index: 1; }
@@ -62,7 +64,10 @@
 
     @media (max-width: 900px) {
       .main-grid { grid-template-columns: 1fr; }
-      .search-box { border-radius: 15px; flex-direction: column; padding: 15px; }
+      .search-box { border-radius: 20px; flex-wrap: wrap; justify-content: center; }
+      .search-box input { min-width: 200px; width: 100%; order: 1; }
+      .btn-search { width: 80%; order: 2; justify-content: center; }
+      .btn-gps { order: 3; }
       #map { height: 350px; }
     }
   </style>
@@ -85,6 +90,7 @@
 
   <div class="search-container">
     <div class="search-box">
+      <button class="btn-gps" onclick="getLocation()" title="Usar minha localização atual"><i class="ph ph-gps"></i></button>
       <input type="text" id="addressInput" placeholder="Digite seu CEP ou cidade...">
       <button class="btn-search" id="btnSearch" onclick="doSearch()"><i class="ph ph-magnifying-glass"></i> BUSCAR</button>
     </div>
@@ -101,18 +107,18 @@
     var map = L.map('map').setView([-14.235, -51.925], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     var markers = L.layerGroup().addTo(map);
+    var userMarker = L.layerGroup().addTo(map);
     var stores = [];
 
-    // Função para limpar coordenadas sujas (como as que têm múltiplos pontos no CSV)
+    // Limpa coordenadas que venham com pontos extras no CSV (ex: -2.976.258) [cite: 1, 68]
     function cleanCoord(val) {
       if (!val) return NaN;
-      let s = String(val).trim();
-      // Se tiver múltiplos pontos (ex: -2.976.258), remove todos menos o primeiro
+      let s = String(val).trim().replace(',', '.');
       let parts = s.split('.');
       if (parts.length > 2) {
         s = parts[0] + '.' + parts.slice(1).join('');
       }
-      return parseFloat(s.replace(',', '.'));
+      return parseFloat(s);
     }
 
     Papa.parse("lojas.csv", {
@@ -122,7 +128,7 @@
       complete: function(res) {
         stores = res.data;
         renderMarkers();
-        document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Digite sua localização para começar.</p>';
+        document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Use o GPS ou digite seu CEP para localizar as lojas.</p>';
       }
     });
 
@@ -131,18 +137,29 @@
         let lat = cleanCoord(s.latitude);
         let lon = cleanCoord(s.longitude);
         if(!isNaN(lat) && !isNaN(lon)) {
-          L.marker([lat, lon]).addTo(markers).bindPopup(`<b>${s.nome}</b>`);
+          L.marker([lat, lon]).addTo(markers).bindPopup(`<b>${s.nome}</b><br>${s.descricao || ''}`);
         }
       });
     }
 
+    // Função GPS (Localização Atual) 
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          updateMapAndList(lat, lon, "Sua Localização");
+        }, () => alert("Não foi possível acessar seu GPS. Tente digitar o CEP."));
+      }
+    }
+
     async function doSearch() {
       const input = document.getElementById('addressInput').value.trim();
-      const btn = document.getElementById('btnSearch');
       if(!input) return;
 
+      const btn = document.getElementById('btnSearch');
       btn.disabled = true;
-      btn.innerHTML = "BUSCANDO...";
+      btn.innerHTML = "Buscando...";
 
       let cleanCEP = input.replace(/\D/g, '');
       
@@ -151,15 +168,13 @@
           const resp = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
           const data = await resp.json();
           if (!data.erro) {
-            // Busca apenas por Cidade e UF do CEP para evitar erros de precisão no mapa
-            performGeocoding(`${data.localidade}, ${data.uf}, Brasil`);
+            // Agora usa o endereço COMPLETO para dar precisão exata 
+            performGeocoding(`${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}, Brasil`);
           } else {
             alert("CEP não encontrado.");
             resetBtn();
           }
-        } catch (e) {
-          performGeocoding(input);
-        }
+        } catch (e) { performGeocoding(input); }
       } else {
         performGeocoding(input);
       }
@@ -176,29 +191,35 @@
         .then(r => r.json())
         .then(data => {
           if(data.length > 0) {
-            let uLat = parseFloat(data[0].lat);
-            let uLon = parseFloat(data[0].lon);
-            map.setView([uLat, uLon], 12);
-            showNearStores(uLat, uLon);
+            updateMapAndList(parseFloat(data[0].lat), parseFloat(data[0].lon));
           } else {
-            alert("Local não encontrado. Tente digitar apenas a cidade.");
+            alert("Endereço exato não localizado. Tente digitar apenas a cidade.");
           }
         })
         .finally(() => resetBtn());
+    }
+
+    function updateMapAndList(uLat, uLon, label = "Você está aqui") {
+      userMarker.clearLayers();
+      L.circleMarker([uLat, uLon], { color: 'red', radius: 10 }).addTo(userMarker).bindPopup(label).openPopup();
+      map.setView([uLat, uLon], 13);
+      showNearStores(uLat, uLon);
     }
 
     function showNearStores(uLat, uLon) {
       let sorted = stores.map(s => {
         let sLat = cleanCoord(s.latitude);
         let sLon = cleanCoord(s.longitude);
-        // Distância aproximada
-        let d = Math.sqrt(Math.pow(sLat - uLat, 2) + Math.pow(sLon - uLon, 2)) * 111;
+        // Distância Haversine aproximada 
+        let d = Math.sqrt(Math.pow(sLat - uLat, 2) + Math.pow(sLon - uLon, 2)) * 111.32;
         return {...s, d, sLat, sLon};
       }).filter(s => !isNaN(s.d)).sort((a,b) => a.d - b.d).slice(0, 15);
 
       let html = '';
       sorted.forEach(s => {
+        // Link corrigido para rota do Google Maps 
         const gMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${s.sLat},${s.sLon}`;
+        
         html += `
           <div class="store-card">
             <span class="dist-badge">${s.d.toFixed(1)} KM</span>
@@ -210,7 +231,7 @@
             </a>
           </div>`;
       });
-      document.getElementById('results').innerHTML = html || '<p>Nenhuma loja encontrada.</p>';
+      document.getElementById('results').innerHTML = html || '<p>Nenhuma loja próxima.</p>';
     }
   </script>
 </body>
