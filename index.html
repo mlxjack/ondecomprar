@@ -57,12 +57,17 @@
     
     .btn-directions { 
       display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: #22c55e; color: white; 
-      text-decoration: none; padding: 8px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; transition: 0.2s; 
+      text-decoration: none; padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; transition: 0.2s; 
     }
+    .btn-directions:hover { background: #16a34a; transform: translateY(-2px); }
 
     @media (max-width: 900px) {
       .main-grid { grid-template-columns: 1fr; }
       #map { height: 350px; }
+      .search-box { border-radius: 20px; flex-wrap: wrap; justify-content: center; }
+      .search-box input { width: 100%; order: 1; }
+      .btn-search { width: 75%; order: 2; }
+      .btn-gps { order: 3; }
     }
   </style>
 </head>
@@ -79,13 +84,13 @@
 
   <section class="hero-locator">
     <h1>Onde Comprar</h1>
-    <p>Localize os revendedores Chumbada Oficial em tempo real.</p>
+    <p>Encontre a Chumbada Oficial mais próxima através do seu CEP ou GPS.</p>
   </section>
 
   <div class="search-container">
     <div class="search-box">
       <button class="btn-gps" onclick="getLocation()" title="Usar meu GPS"><i class="ph ph-gps"></i></button>
-      <input type="text" id="addressInput" placeholder="Digite seu CEP ou cidade...">
+      <input type="text" id="addressInput" placeholder="Digite seu CEP ou sua cidade...">
       <button class="btn-search" id="btnSearch" onclick="doSearch()"><i class="ph ph-magnifying-glass"></i> BUSCAR</button>
     </div>
   </div>
@@ -93,7 +98,7 @@
   <div class="main-grid">
     <div id="map"></div>
     <div class="results-list" id="results">
-      <p style="text-align: center; color: var(--gray); margin-top: 50px;">Carregando...</p>
+      <p style="text-align: center; color: var(--gray); margin-top: 50px;">Carregando lojas...</p>
     </div>
   </div>
 
@@ -104,10 +109,10 @@
     var userMarker = L.layerGroup().addTo(map);
     var stores = [];
 
-    // Limpeza profunda de coordenadas do CSV
+    // Limpa coordenadas bugadas do CSV
     function cleanCoord(val) {
       if (!val) return NaN;
-      let s = String(val).replace(/[^\d\.,-]/g, '').replace(',', '.');
+      let s = String(val).trim().replace(',', '.');
       let parts = s.split('.');
       if (parts.length > 2) s = parts[0] + '.' + parts.slice(1).join('');
       return parseFloat(s);
@@ -120,7 +125,7 @@
       complete: function(res) {
         stores = res.data;
         renderMarkers();
-        document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Busque por CEP para ver as distâncias exatas.</p>';
+        document.getElementById('results').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 20px;">Use o GPS ou digite seu CEP para ver as lojas parceiras.</p>';
       }
     });
 
@@ -129,7 +134,7 @@
         let lat = cleanCoord(s.latitude);
         let lon = cleanCoord(s.longitude);
         if(!isNaN(lat) && !isNaN(lon)) {
-          L.marker([lat, lon]).addTo(markers).bindPopup(`<b>${s.nome}</b>`);
+          L.marker([lat, lon]).addTo(markers).bindPopup(`<b>${s.nome}</b><br>${s.descricao || ''}`);
         }
       });
     }
@@ -137,18 +142,18 @@
     function getLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
-          updateMapAndList(pos.coords.latitude, pos.coords.longitude, "Sua posição atual");
-        }, () => alert("GPS não autorizado. Digite o CEP."));
+          updateMapAndList(pos.coords.latitude, pos.coords.longitude, "Sua localização atual");
+        }, () => alert("Erro ao acessar GPS. Por favor, digite seu CEP."));
       }
     }
 
     async function doSearch() {
       const input = document.getElementById('addressInput').value.trim();
-      const btn = document.getElementById('btnSearch');
       if(!input) return;
-
+      
+      const btn = document.getElementById('btnSearch');
       btn.disabled = true;
-      btn.innerHTML = "Calculando...";
+      btn.innerHTML = "Buscando...";
 
       let cleanCEP = input.replace(/\D/g, '');
       
@@ -157,21 +162,32 @@
           const resp = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
           const data = await resp.json();
           if (!data.erro) {
-            // Busca o endereço COMPLETO para precisão máxima
-            const fullAddr = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}, Brasil`;
-            performGeocoding(fullAddr);
+            // Tenta busca em cascata: Endereço completo -> Bairro -> Cidade
+            const queries = [
+              `${data.logradouro}, ${data.localidade} - ${data.uf}`,
+              `${data.bairro}, ${data.localidade} - ${data.uf}`,
+              `${data.localidade} - ${data.uf}`
+            ];
+            tryCascadingSearch(queries);
           } else {
-            alert("CEP não encontrado.");
+            alert("CEP não localizado.");
             resetBtn();
           }
         } catch (e) { performGeocoding(input); }
       } else { performGeocoding(input); }
     }
 
-    function resetBtn() {
-      const btn = document.getElementById('btnSearch');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="ph ph-magnifying-glass"></i> BUSCAR';
+    async function tryCascadingSearch(queries) {
+      for (let q of queries) {
+        let found = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&countrycodes=br&limit=1`).then(r => r.json());
+        if (found && found.length > 0) {
+          updateMapAndList(parseFloat(found[0].lat), parseFloat(found[0].lon));
+          resetBtn();
+          return;
+        }
+      }
+      alert("Local não encontrado. Tente digitar apenas o nome da cidade.");
+      resetBtn();
     }
 
     function performGeocoding(address) {
@@ -180,15 +196,21 @@
         .then(data => {
           if(data.length > 0) {
             updateMapAndList(parseFloat(data[0].lat), parseFloat(data[0].lon));
-          } else { alert("Endereço não encontrado."); }
+          } else { alert("Local não encontrado."); }
         })
         .finally(() => resetBtn());
     }
 
-    function updateMapAndList(uLat, uLon, label = "Ponto de busca") {
+    function resetBtn() {
+      const btn = document.getElementById('btnSearch');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ph ph-magnifying-glass"></i> BUSCAR';
+    }
+
+    function updateMapAndList(uLat, uLon, label = "Sua busca") {
       userMarker.clearLayers();
-      L.circleMarker([uLat, uLon], { color: 'red', radius: 8 }).addTo(userMarker).bindPopup(label).openPopup();
-      map.setView([uLat, uLon], 14);
+      L.circleMarker([uLat, uLon], { color: 'red', radius: 9, fillOpacity: 0.8 }).addTo(userMarker).bindPopup(label).openPopup();
+      map.setView([uLat, uLon], 13);
       showNearStores(uLat, uLon);
     }
 
@@ -196,17 +218,18 @@
       let sorted = stores.map(s => {
         let sLat = cleanCoord(s.latitude);
         let sLon = cleanCoord(s.longitude);
-        // Fórmula de distância Haversine simplificada
         let d = Math.sqrt(Math.pow(sLat - uLat, 2) + Math.pow(sLon - uLon, 2)) * 111.32;
         return {...s, d, sLat, sLon};
       }).filter(s => !isNaN(s.d)).sort((a,b) => a.d - b.d).slice(0, 15);
 
       let html = '';
       sorted.forEach(s => {
+        // Link de rota oficial do Google Maps
         const routeUrl = `https://www.google.com/maps/dir/?api=1&destination=${s.sLat},${s.sLon}`;
+        
         html += `
           <div class="store-card">
-            <span class="dist-badge">${s.d.toFixed(1)} KM</span>
+            <span class="dist-badge">${s.d.toFixed(1)} KM de você</span>
             <h4 onclick="map.setView([${s.sLat}, ${s.sLon}], 16)" style="cursor:pointer">${s.nome}</h4>
             <p><i class="ph ph-map-pin"></i> ${s.descricao || ''}</p>
             <p style="font-weight:700; color:var(--primary)"><i class="ph ph-phone"></i> ${s.telefone || ''}</p>
